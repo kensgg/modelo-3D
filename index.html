@@ -3,109 +3,256 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D TV PORTAL</title>
+<title>3D PORTAL - TV</title>
 <style>
-  html, body {
-    margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; color: #fff; font-family: sans-serif;
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root {
+    --bg-color: #f4f4f4;
+    --text-color: #111111;
+    --border-color: #999999;
+    --accent-color: #333333;
+    --font-main: 'Press Start 2P', monospace;
   }
-  #canvas-container { width: 100%; height: 100%; position: relative; }
-  #message {
-    position: absolute; left: 50%; top: 20px; transform: translateX(-50%);
-    padding: 10px 20px; font-size: 16px; background: rgba(0, 0, 0, 0.8);
-    border-radius: 5px; z-index: 2; text-align: center; pointer-events: none;
+
+  * { box-sizing: border-box; }
+
+  body, html {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-main);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    height: 50px;
+    border-bottom: 2px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background-color: #e8e8e8;
+    z-index: 10;
+  }
+
+  .logo { font-size: 14px; margin-right: 20px; color: var(--accent-color); }
+
+  main {
+    flex-grow: 1; display: flex; flex-direction: row; position: relative; height: calc(100% - 80px);
+  }
+
+  aside {
+    width: 280px; min-width: 280px; border-right: 2px dashed var(--border-color);
+    padding: 15px; display: flex; flex-direction: column; gap: 20px; background-color: #eaeaea; z-index: 5;
+  }
+
+  .panel { border: 1px solid var(--border-color); padding: 10px; font-size: 10px; }
+  .panel-title { margin: 0 0 10px 0; font-size: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; color: var(--accent-color); }
+  
+  .blink { animation: blinker 1s linear infinite; }
+  @keyframes blinker { 50% { opacity: 0; } }
+
+  .btn {
+    background: transparent; color: var(--text-color); font-family: var(--font-main); font-size: 10px;
+    border: 2px solid var(--text-color); padding: 10px; cursor: pointer; text-transform: uppercase;
+    text-align: center; width: 100%; margin-top: 10px;
+  }
+  .btn:hover { background: var(--text-color); color: var(--bg-color); }
+
+  .control-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; font-size: 10px; }
+  .control-label { color: var(--accent-color); }
+  input[type=range] { width: 100%; cursor: pointer; accent-color: var(--accent-color); background: var(--bg-color); }
+
+  .viewport-container { flex-grow: 1; position: relative; background-color: #ffffff; }
+  #canvas-container { width: 100%; height: 100%; }
+  
+  .corner-accent { position: absolute; width: 30px; height: 30px; z-index: 5; opacity: 0.5; pointer-events: none; }
+  .corner-tl { top: 10px; left: 10px; border-top: 4px solid var(--border-color); border-left: 4px solid var(--border-color); }
+  .corner-br { bottom: 10px; right: 10px; border-bottom: 4px solid var(--border-color); border-right: 4px solid var(--border-color); }
+
+  footer {
+    height: 30px; border-top: 2px dashed var(--border-color); background-color: #e8e8e8;
+    display: flex; justify-content: space-between; align-items: center; padding: 0 15px;
+    font-size: 10px; z-index: 10;
+  }
+  
+  .loading-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9);
+    display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 20;
+  }
+  .loading-text { margin-bottom: 15px; font-size: 12px; color: #111; }
+
+  .checkerboard {
+    background-image: linear-gradient(45deg, #dddddd 25%, transparent 25%, transparent 75%, #dddddd 75%, #dddddd), linear-gradient(45deg, #dddddd 25%, transparent 25%, transparent 75%, #dddddd 75%, #dddddd);
+    background-size: 10px 10px; background-position: 0 0, 5px 5px;
+  }
+
+  @media (max-width: 768px) {
+    main { flex-direction: column; }
+    aside { width: 100%; min-width: 100%; height: auto; border-right: none; border-top: 2px dashed var(--border-color); order: 2; }
+    .viewport-container { height: 60vh; order: 1; }
   }
 </style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
-<div id="canvas-container"></div>
-<div id="message">Iniciando...</div>
+<header class="checkerboard">
+  <div class="logo">3D_PORTAL</div>
+</header>
+
+<main>
+  <aside>
+    <div class="panel" style="text-align: center; padding: 15px;">
+      <h3 class="panel-title">MODELO</h3>
+      <div><span class="blink">&gt;&gt;&gt;</span> EXAMEN.GLB</div>
+    </div>
+
+    <div class="panel">
+      <h3 class="panel-title">CONTROLES</h3>
+      <div class="control-row">
+        <label class="control-label" for="zoom-slider">ZOOM: <span id="zoom-val">1.0x</span></label>
+        <input type="range" id="zoom-slider" min="10" max="250" value="100">
+      </div>
+      <button class="btn" id="btn-reset">CENTRAR CÁMARA</button>
+    </div>
+  </aside>
+
+  <div class="viewport-container">
+    <div class="corner-accent corner-tl"></div>
+    <div class="corner-accent corner-br"></div>
+    <div id="canvas-container"></div>
+    
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-text blink" id="load-status">CONECTANDO...</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div id="status-left">ESTADO: INACTIVO</div>
+  <div id="status-right">SYS.v.1.1.0_TV</div>
+</footer>
 
 <script>
   const container = document.getElementById('canvas-container');
-  const message = document.getElementById('message');
+  const loadingOverlay = document.getElementById('loading-overlay');
+  const loadStatus = document.getElementById('load-status');
+  const statusLeft = document.getElementById('status-left');
+  const zoomSlider = document.getElementById('zoom-slider');
+  const zoomVal = document.getElementById('zoom-val');
 
-  // 1. Escena y Cámara
+  // 1. Escena Básica Fondo Blanco
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x111111);
+  scene.background = new THREE.Color(0xffffff);
 
-  const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
   camera.position.set(0, 0, 5);
 
-  // 2. Renderizador optimizado para Smart TV
+  // 2. Renderizador ultraligero sin sobrecargar la TV
   const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(1); 
   renderer.setSize(container.clientWidth, container.clientHeight);
   container.appendChild(renderer.domElement);
 
-  // 3. Iluminación básica
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+  // 3. Luces estáticas eficientes
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1.3);
   scene.add(ambientLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+  dirLight.position.set(3, 5, 4);
+  scene.add(dirLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
-  directionalLight.position.set(2, 4, 3);
-  scene.add(directionalLight);
+  let currentModel = null;
+  let modelBaseScale = 1;
 
-  // 4. Carga del modelo (Estructura clásica garantizada)
-  const modelUrl = './Examen.glb';
+  // 4. Cargador Clásico compatible
   const loader = new THREE.GLTFLoader();
-  let model = null;
-
-  message.innerText = 'Cargando Examen.glb (20MB)...';
+  
+  loadStatus.innerText = "CARGANDO EXAMEN.GLB...";
+  statusLeft.innerText = "ESTADO: CARGANDO...";
 
   loader.load(
-    modelUrl,
+    './Examen.glb',
     function (gltf) {
-      model = gltf.scene;
-      scene.add(model);
-      fitModel();
-      message.style.display = 'none'; // Ocultar cartel al terminar
+      currentModel = gltf.scene;
+      scene.add(currentModel);
+      
+      // Auto-centrar y ajustar tamaño inicial
+      fitCameraToObject(currentModel);
+      
+      loadingOverlay.style.display = 'none';
+      statusLeft.innerText = "ESTADO: MODELO_CARGADO";
     },
     function (xhr) {
       if (xhr.lengthComputable) {
         const percent = Math.round((xhr.loaded / xhr.total) * 100);
-        message.innerText = 'Cargando: ' + percent + '%';
+        loadStatus.innerText = "CARGANDO: " + percent + "%";
       }
     },
     function (error) {
       console.error(error);
-      message.innerText = 'Error al cargar el archivo .glb';
+      loadStatus.innerText = "ERROR AL CARGAR .GLB";
+      statusLeft.innerText = "ESTADO: ERROR";
     }
   );
 
-  // Ajustar la cámara automáticamente al tamaño de tu modelo
-  function fitModel() {
-    if (!model) return;
-    const box = new THREE.Box3().setFromObject(model);
+  // Ajuste automático de la cámara al modelo
+  function fitCameraToObject(object) {
+    if (!object) return;
+    const box = new THREE.Box3().setFromObject(object);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
+    
     const maxDim = Math.max(size.x, size.y, size.z);
     if (maxDim === 0) return;
 
     const fov = camera.fov * (Math.PI / 180);
-    let distance = maxDim / (2 * Math.tan(fov / 2));
-    distance *= 1.4; 
+    let cameraZ = maxDim / (2 * Math.tan(fov / 2));
+    cameraZ *= 1.4; 
 
-    camera.position.set(center.x, center.y + (size.y * 0.1), center.z + distance);
+    camera.position.set(center.x, center.y + (size.y * 0.1), center.z + cameraZ);
     camera.lookAt(center);
-    camera.updateProjectionMatrix();
+    
+    // Guardar escala inicial
+    modelBaseScale = object.scale.x;
+    zoomSlider.value = 100;
+    zoomVal.innerText = "1.0x";
   }
 
-  // 5. Animación continua
+  // Controlador de Zoom simplificado (Escala el modelo en vez de mover cámaras complejas)
+  zoomSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    zoomVal.innerText = (val / 100).toFixed(1) + 'x';
+    if (currentModel) {
+       const scale = (val / 100) * modelBaseScale;
+       currentModel.scale.set(scale, scale, scale);
+    }
+  });
+
+  // Botón Resetear
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    if (currentModel) {
+      currentModel.scale.set(modelBaseScale, modelBaseScale, modelBaseScale);
+      fitCameraToObject(currentModel);
+    }
+  });
+
+  // 5. Ciclo de animación optimizado con rotación suave automática
   function animate() {
     requestAnimationFrame(animate);
-    if (model) {
-      model.rotation.y += 0.005; 
+    if (currentModel) {
+      currentModel.rotation.y += 0.004; 
     }
     renderer.render(scene, camera);
   }
-
   animate();
 
-  // Redimensionamiento de pantalla
-  window.addEventListener('resize', function () {
+  // Redimensionar pantalla por si cambia la orientación de la TV
+  window.addEventListener('resize', () => {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
